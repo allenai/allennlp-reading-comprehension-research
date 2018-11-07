@@ -1,0 +1,12 @@
+language: python
+python:
+  - "3.6.1"
+install:
+  - pip install -q -r requirements.txt
+  - pip install codecov
+cache: pip
+script:
+  - pytest --cov=reading_comprehension
+  - pylint reading_comprehension tests
+after_success:
+  - codecov

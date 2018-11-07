@@ -1,0 +1,4 @@
+git+git://github.com/allenai/allennlp
+pylint
+pytest
+pytest-cov

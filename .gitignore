@@ -1,0 +1,17 @@
+# miscellaneous
+
+.cache/
+.mypy_cache
+
+
+# python
+
+*.pyc
+*.pyo
+__pycache__
+
+
+# testing and continuous integration
+
+.coverage
+.pytest_cache/
