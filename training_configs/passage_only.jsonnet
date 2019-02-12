@@ -1,38 +1,56 @@
 {
     "dataset_reader": {
-        "type": "squad_limited",
+        "type": "drop",
         "token_indexers": {
             "tokens": {
                 "type": "single_id",
                 "lowercase_tokens": true
             },
             "token_characters": {
-                "type": "characters"
+                "type": "characters",
+                "min_padding_length": 5
             }
         },
         "passage_length_limit": 400,
         "question_length_limit": 50,
-        "passage_length_limit_for_evaluation": 1000,
-        "question_length_limit_for_evaluation": 100
+        "skip_when_all_empty": ["passage_span"],
+        "instance_format": "squad"
+    },
+    "validation_dataset_reader": {
+        "type": "drop",
+        "token_indexers": {
+            "tokens": {
+                "type": "single_id",
+                "lowercase_tokens": true
+            },
+            "token_characters": {
+                "type": "characters",
+                "min_padding_length": 5
+            }
+        },
+        "passage_length_limit": 1000,
+        "question_length_limit": 100,
+        "skip_when_all_empty": [],
+        "instance_format": "squad"
     },
     "vocabulary": {
         "min_count": {
             "token_characters": 200
         },
         "pretrained_files": {
-            "tokens": "https://s3-us-west-2.amazonaws.com/yizhongw-dev/glove/glove.840B.300d.lower.zip"
+            "tokens": "https://s3-us-west-2.amazonaws.com/allennlp/datasets/glove/glove.840B.300d.lower.converted.zip"
         },
         "only_include_pretrained_words": true
     },
-    "train_data_path": "https://s3-us-west-2.amazonaws.com/allennlp/datasets/squad/squad-train-v1.1.json",
-    "validation_data_path": "https://s3-us-west-2.amazonaws.com/allennlp/datasets/squad/squad-dev-v1.1.json",
+    "train_data_path": std.extVar("DROP_TRAIN_DATA_PATH"),
+    "validation_data_path": std.extVar("DROP_DEV_DATA_PATH"),
     "model": {
-        "type": "qanet",
+        "type": "passage_only",
         "text_field_embedder": {
             "token_embedders": {
                 "tokens": {
                     "type": "embedding",
-                    "pretrained_file": "https://s3-us-west-2.amazonaws.com/yizhongw-dev/glove/glove.840B.300d.lower.zip",
+                    "pretrained_file": "https://s3-us-west-2.amazonaws.com/allennlp/datasets/glove/glove.840B.300d.lower.converted.zip",
                     "embedding_dim": 300,
                     "trainable": false
                 },
@@ -53,27 +71,7 @@
             }
         },
         "num_highway_layers": 2,
-        "phrase_layer": {
-            "type": "qanet_encoder",
-            "input_dim": 128,
-            "hidden_dim": 128,
-            "attention_projection_dim": 128,
-            "feedforward_hidden_dim": 128,
-            "num_blocks": 1,
-            "num_convs_per_block": 4,
-            "conv_kernel_size": 7,
-            "num_attention_heads": 8,
-            "dropout_prob": 0.1,
-            "layer_dropout_undecayed_prob": 0.1,
-            "attention_dropout_prob": 0
-        },
-        "matrix_attention_layer": {
-            "type": "linear",
-            "tensor_1_dim": 128,
-            "tensor_2_dim": 128,
-            "combination": "x,y,x*y"
-        },
-        "modeling_layer": {
+        "encoding_layer": {
             "type": "qanet_encoder",
             "input_dim": 128,
             "hidden_dim": 128,
@@ -110,11 +108,10 @@
                 "num_tokens"
             ]
         ],
-        "batch_size": 32,
+        "batch_size": 16,
         "max_instances_in_memory": 600
     },
     "trainer": {
-        "type": "ema_trainer",
         "num_epochs": 50,
         "grad_norm": 5,
         "patience": 10,
@@ -129,6 +126,9 @@
             ],
             "eps": 1e-07
         },
-        "exponential_moving_average_decay": 0.9999
+        "moving_average": {
+            "type": "exponential",
+            "decay": 0.9999
+        }
     }
 }

@@ -1,10 +1,8 @@
 #pylint: disable=unused-import
 import pathlib
 from allennlp.common.testing import ModelTestCase
-from reading_comprehension.qanet import QaNet
-from reading_comprehension.qanet_encoder import QaNetEncoder
-from reading_comprehension.squad_reader import SquadReader
-from reading_comprehension.ema_trainer import EMATrainer
+from reading_comprehension.drop_models.augmented_qanet import AugmentedQANet
+from reading_comprehension.data.drop_reader import DROPReader
 
 
 class QANetModelTest(ModelTestCase):
@@ -16,8 +14,8 @@ class QANetModelTest(ModelTestCase):
 
     def setUp(self):
         super().setUp()
-        self.set_up_model(self.FIXTURES_ROOT / "qanet" / "experiment.json",
-                          self.FIXTURES_ROOT / "qanet" / "squad.json")
+        self.set_up_model(self.FIXTURES_ROOT / "aug_qanet" / "experiment.json",
+                          self.FIXTURES_ROOT / "aug_qanet" / "drop.json")
 
     def test_model_can_train_save_and_load(self):
         self.ensure_model_can_train_save_and_load(self.param_file)

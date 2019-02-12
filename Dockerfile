@@ -14,12 +14,18 @@ ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 LABEL com.nvidia.volumes.needed="nvidia_driver"
 
-RUN pip install git+git://github.com/allenai/allennlp
-RUN pip install matplotlib
+WORKDIR /rc-experiments/
 
-WORKDIR /sparc-rc-model/
+# Use this line here because currently the downloading the 1.0.0 version in docker always crash.
+# The reason might be that PyTorch 1.0 uses different installation file for different CPU/GPU settings.
+# When building image locally on mac, there is no GPU support.
+# And Deehru found that the performance becomes very unstable on torch 1.0. This needs more tests to confirm.
+# So we just use the old version of Pytorch here.
+RUN pip install torch==0.4.1
 
-# Copy this local allennlp repo if we want to test some modifications to allennlp
-# COPY allennlp allennlp
-
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+RUN spacy download en_core_web_sm
 COPY reading_comprehension reading_comprehension
+
+COPY env_vars env_vars

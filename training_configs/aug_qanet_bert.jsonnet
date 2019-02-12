@@ -1,6 +1,6 @@
 {
     "dataset_reader": {
-        "type": "squad_limited",
+        "type": "drop",
         "token_indexers": {
             "tokens": {
                 "type": "single_id",
@@ -9,21 +9,66 @@
             "token_characters": {
                 "type": "characters",
                 "min_padding_length": 5
-            }
+            },
+            "bert": {
+                "type": "bert-pretrained",
+                "pretrained_model": "bert-base-uncased",
+                "do_lowercase": true,
+                "use_starting_offsets": false
+            },
+        },
+        "passage_length_limit": 330,
+        "question_length_limit": 50,
+        "skip_when_all_empty": ["passage_span", "question_span", "addition_subtraction", "counting"],
+        "instance_format": "drop"
+    },
+    "validation_dataset_reader": {
+        "type": "drop",
+        "token_indexers": {
+            "tokens": {
+                "type": "single_id",
+                "lowercase_tokens": true
+            },
+            "token_characters": {
+                "type": "characters",
+                "min_padding_length": 5
+            },
+            "bert": {
+                "type": "bert-pretrained",
+                "pretrained_model": "bert-base-uncased",
+                "do_lowercase": true,
+                "use_starting_offsets": false
+            },
         },
         "passage_length_limit": 400,
         "question_length_limit": 50,
-        "passage_length_limit_for_evaluation": 1000,
-        "question_length_limit_for_evaluation": 100
+        "skip_when_all_empty": [],
+        "instance_format": "drop"
     },
-    "train_data_path": "fixtures/qanet/squad.json",
-    "validation_data_path": "fixtures/qanet/squad.json",
+    "vocabulary": {
+        "min_count": {
+            "token_characters": 200
+        },
+        "pretrained_files": {
+            "tokens": "https://s3-us-west-2.amazonaws.com/allennlp/datasets/glove/glove.840B.300d.lower.converted.zip"
+        },
+        "only_include_pretrained_words": true
+    },
+    "train_data_path": std.extVar("DROP_TRAIN_DATA_PATH"),
+    "validation_data_path": std.extVar("DROP_DEV_DATA_PATH"),
     "model": {
-        "type": "qanet",
+        "type": "augmented_qanet",
         "text_field_embedder": {
+            "allow_unmatched_keys": true,
+            "embedder_to_indexer_map": {
+                "tokens": ["tokens"],
+                "token_characters": ["token_characters"],
+                "bert": ["bert", "bert-offsets"],
+            },
             "token_embedders": {
                 "tokens": {
                     "type": "embedding",
+                    "pretrained_file": "https://s3-us-west-2.amazonaws.com/allennlp/datasets/glove/glove.840B.300d.lower.converted.zip",
                     "embedding_dim": 300,
                     "trainable": false
                 },
@@ -39,7 +84,13 @@
                         "ngram_filter_sizes": [
                             5
                         ]
-                    }
+                    },
+                },
+                "bert": {
+                    "type": "bert-pretrained",
+                    "pretrained_model": "bert-base-uncased",
+                    "requires_grad": false,
+                    "top_layer_only": true
                 }
             }
         },
@@ -87,6 +138,12 @@
                     "alpha": 1e-07
                 }
             ]
+        ],
+        "answering_abilities": [
+            "passage_span_extraction",
+            "question_span_extraction",
+            "addition_subtraction",
+            "counting"
         ]
     },
     "iterator": {
@@ -101,20 +158,18 @@
                 "num_tokens"
             ]
         ],
-        "padding_noise": 0.0,
-        "batch_size": 32,
+        "batch_size": 16,
         "max_instances_in_memory": 600
     },
     "trainer": {
-        "type": "ema_trainer",
-        "num_epochs": 1,
+        "num_epochs": 50,
         "grad_norm": 5,
         "patience": 10,
         "validation_metric": "+f1",
-        "cuda_device": -1,
+        "cuda_device": 0,
         "optimizer": {
             "type": "adam",
-            "lr": 0.001,
+            "lr": 5e-4,
             "betas": [
                 0.8,
                 0.999

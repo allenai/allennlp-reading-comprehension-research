@@ -2,3 +2,4 @@ git+git://github.com/allenai/allennlp
 pylint
 pytest>=3.6
 pytest-cov
+word2number==1.1
